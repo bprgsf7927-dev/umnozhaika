@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F5F8F3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Умножайка">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;font-size:14px;overscroll-behavior:none;user-select:none;-webkit-user-select:none}
+textarea{user-select:text;-webkit-user-select:text}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Умножайка</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@500;700;800;900&display=swap">
+<style>
+/* Тетрадь в клетку: бумага в клетку, чернила, красная ручка учителя, золотые звезды. Пиксельный герой живет в клетках. */
+:root{
+  --paper:#F5F8F3; --grid:#D3E2EC; --card:#FFFFFF; --ink:#1C3374; --muted:#5A6A8A; --soft:#E8EEF6;
+  --red:#CF3A2E; --red-soft:#FBE3E0; --green:#2C8A4D; --green-soft:#DDF2E3; --sun:#F0B429; --sun-soft:#FCEFCB;
+  --display:'Press Start 2P',ui-monospace,monospace;
+  --body:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#17221E; --grid:#22312B; --card:#21302A; --ink:#E9F1EC; --muted:#9CB0A5; --soft:#2A3A33;
+  --red:#FF7C6D; --red-soft:#4A2A27; --green:#6FD293; --green-soft:#21412F; --sun:#F6C85F; --sun-soft:#463C22; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#17221E; --grid:#22312B; --card:#21302A; --ink:#E9F1EC; --muted:#9CB0A5; --soft:#2A3A33;
+  --red:#FF7C6D; --red-soft:#4A2A27; --green:#6FD293; --green-soft:#21412F; --sun:#F6C85F; --sun-soft:#463C22; color-scheme:dark}
+html,body{height:100%}
+body{background-color:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:26px 26px;-webkit-tap-highlight-color:transparent}
+#app{max-width:760px;margin:0 auto;padding-block:12px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+h1,h2,h3{margin:0;text-wrap:balance}
+.px{font-family:var(--display);letter-spacing:.02em}
+.bar{display:flex;align-items:center;gap:12px;min-height:44px}
+.bar .home{padding:8px 12px;border-radius:10px;background:var(--card);border:2px solid var(--ink);font-weight:800;font-size:15px;white-space:nowrap}
+.meter{flex:1;height:14px;border:2px solid var(--ink);border-radius:8px;background:var(--card);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--green);transition:width .4s}
+.bar .info{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;font-size:15px}
+.logo{font-family:var(--display);font-size:15px;line-height:1.5}
+.card{background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:18px;box-shadow:4px 4px 0 var(--grid)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 22px;border-radius:14px;font-weight:900;font-size:19px;
+  background:var(--ink);color:var(--paper);box-shadow:0 4px 0 var(--muted);transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--muted)}
+.btn.ghost{background:var(--card);color:var(--ink);border:2px solid var(--ink)}
+.btn.wide{width:100%}
+.btn.small{padding:9px 14px;font-size:15px;box-shadow:0 3px 0 var(--muted)}
+.muted{color:var(--muted)}
+.hello{display:flex;gap:14px;align-items:center}
+.hello canvas{width:96px;height:96px;image-rendering:pixelated;flex:none}
+.bubble{position:relative;background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:12px 14px;font-weight:700;min-width:0}
+.bubble::before{content:"";position:absolute;left:-10px;top:24px;border:8px solid transparent;border-right-color:var(--ink);border-left:0}
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 16px}
+.step{border:2px dashed var(--muted);border-radius:12px;padding:10px 12px}
+.step.done{border-style:solid;border-color:var(--green);background:var(--green-soft)}
+.step b{display:block;font-size:18px}
+.step span{font-size:14px;color:var(--muted)}
+.step.done span{color:var(--green);font-weight:800}
+.chips{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.chip{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:12px 14px}
+.chip b{font-size:28px;font-weight:900;font-variant-numeric:tabular-nums;display:block;line-height:1.1}
+.chip span{font-size:14px;color:var(--muted)}
+.stage{display:grid;gap:8px;padding:12px 0;border-top:2px dashed var(--grid)}
+.stage:first-of-type{border-top:0}
+.stage h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.nodes{display:flex;flex-wrap:wrap;gap:10px}
+.node{min-width:72px;padding:10px 12px;border-radius:12px;border:2px solid var(--muted);color:var(--muted);font-weight:900;font-size:17px;background:var(--card)}
+.node.done{border-color:var(--green);color:var(--green);background:var(--green-soft)}
+.node.next{border-color:var(--ink);color:var(--paper);background:var(--ink)}
+.node.lock{opacity:.55;cursor:default}
+.node small{display:block;font-size:11px;font-weight:700}
+.task{display:flex;flex-direction:column;gap:16px;align-items:stretch}
+.task-head{display:flex;align-items:center;gap:10px}
+.task-head canvas{width:48px;height:48px;image-rendering:pixelated}
+.task-head .prompt{font-weight:800;font-size:18px;flex:1}
+.lamp{padding:8px 12px;border-radius:10px;border:2px solid var(--sun);background:var(--sun-soft);font-weight:800;font-size:15px}
+.expr{text-align:center;font-weight:900;font-size:clamp(46px,11vw,86px);line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.expr .q{display:inline-block;min-width:1.4em;border-bottom:5px solid var(--sun);color:var(--muted)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{padding:18px 8px;border-radius:14px;border:2px solid var(--ink);background:var(--card);font-weight:900;font-size:34px;font-variant-numeric:tabular-nums;box-shadow:0 4px 0 var(--grid)}
+.opt:active{transform:translateY(2px)}
+.opt.ok,.pairbtn.ok{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.opt.bad,.pairbtn.bad{background:var(--red-soft);border-color:var(--red);color:var(--red)}
+.tf{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tf .opt{font-size:24px}
+.pairs{display:grid;grid-template-columns:1.2fr 1fr;gap:10px 14px}
+.pairs .colp{display:grid;gap:10px}
+.pairbtn{padding:14px 8px;border-radius:12px;border:2px solid var(--ink);background:var(--card);font-weight:900;font-size:24px;font-variant-numeric:tabular-nums}
+.pairbtn.sel{background:var(--sun-soft);border-color:var(--sun)}
+.pairbtn.gone{opacity:.35;pointer-events:none}
+.answer{min-height:64px;border:3px solid var(--ink);border-radius:14px;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:900;font-variant-numeric:tabular-nums;max-width:260px;width:100%;margin:0 auto}
+.answer.empty{color:var(--muted)}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:420px;width:100%;margin:0 auto}
+.keys button{padding:14px 0;border-radius:12px;border:2px solid var(--ink);background:var(--card);font-weight:900;font-size:28px;box-shadow:0 3px 0 var(--grid)}
+.keys button.go{background:var(--ink);color:var(--paper)}
+.fb{border-radius:14px;padding:14px 16px;border:2px solid;display:grid;gap:10px}
+.fb.good{border-color:var(--green);background:var(--green-soft)}
+.fb.bad{border-color:var(--red);background:var(--red-soft)}
+.fb.tip{border-color:var(--sun);background:var(--sun-soft)}
+.fb .big{font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}
+.hint{display:grid;gap:8px}
+.hint ul{margin:0;padding-left:20px;display:grid;gap:4px}
+.hint li{font-weight:700}
+.vis{display:flex;justify-content:center;overflow-x:auto;padding:4px 0}
+.vis svg{max-width:100%;height:auto}
+.colgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;font-weight:800;font-size:20px;font-variant-numeric:tabular-nums}
+.colgrid div{border-bottom:1px solid var(--grid);padding:2px 4px}
+.lesson-card h2{font-size:26px;font-weight:900;margin-bottom:8px}
+.lesson-card p{font-size:20px;margin:0 0 14px;max-width:60ch}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots i{width:10px;height:10px;border-radius:2px;background:var(--grid)}
+.dots i.on{background:var(--ink)}
+.result{text-align:center;display:grid;gap:14px;justify-items:center}
+.stars{font-size:44px;letter-spacing:6px;color:var(--sun)}
+.stars .off{color:var(--grid)}
+.list{display:grid;gap:8px}
+.row2{display:flex;gap:10px;flex-wrap:wrap}
+.heat{display:grid;grid-template-columns:repeat(11,minmax(28px,1fr));gap:3px;font-variant-numeric:tabular-nums;font-size:13px;font-weight:800;min-width:340px}
+.heat div{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:5px;max-width:100%}
+.heat .hd{color:var(--muted)}
+.c-none{background:var(--soft);color:var(--muted)}
+.c-new{background:var(--card);border:1px solid var(--grid)}
+.c-weak{background:var(--red-soft);color:var(--red)}
+.c-mid{background:var(--sun-soft)}
+.c-ok{background:var(--green-soft);color:var(--green)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:3px;display:inline-block}
+.bars{display:grid;grid-template-columns:repeat(14,1fr);gap:4px;align-items:end;height:120px;border-bottom:2px solid var(--ink)}
+.bars div{background:var(--ink);border-radius:3px 3px 0 0;min-height:2px}
+.bars div.zero{background:var(--grid)}
+.barlab{display:grid;grid-template-columns:repeat(14,1fr);gap:4px;font-size:11px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.hard{display:grid;gap:8px}
+.hard .it{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--grid);border-radius:10px}
+.hard .it b{font-size:20px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hard .it span{font-size:14px;color:var(--muted);min-width:0}
+select,textarea{font:inherit;color:var(--ink);background:var(--card);border:2px solid var(--ink);border-radius:10px;padding:8px 10px}
+textarea{width:100%;min-height:70px;box-sizing:border-box}
+.sec h2{font-size:20px;font-weight:900;margin-bottom:10px}
+.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media (prefers-reduced-motion:reduce){.shake{animation:none}.meter i{transition:none}}
+@media (max-width:480px){.steps{grid-template-columns:1fr}.opt{font-size:28px}.lesson-card p{font-size:18px}}
+</style>
+
+</head>
+<body>
+<div id="app">
+  <header class="bar" id="bar"></header>
+  <main id="view"></main>
+</div>
+
+<script>
+/* ========= ГЕРОЙ =========
+   Заглушка 12×12 пикселей. Ярослав нарисует своего героя и заменит эти строки.
+   k — контур, o — тело, w — белок глаза, p — зрачок, r — щечки, . — пусто */
+const HERO_TOP=[".k........k.",".kk......kk.",".kok....kok.",".kookkkkook.",".kooooooook.",".kowpoowpok.",".kowpoowpok.",".kroooooork."];
+const HERO_MOUTH={idle:[".kooooooook.",".kookkkkook."],happy:[".kokooookok.",".kookkkkook."],oops:[".koookkoook.",".kookookook."]};
+const HERO_BOTTOM=["..kooooook..","...kkkkkk..."];
+function drawHero(cv,mood){
+  const rows=[...HERO_TOP,...(HERO_MOUTH[mood]||HERO_MOUTH.idle),...HERO_BOTTOM];
+  const ctx=cv.getContext('2d');const n=12;const px=Math.floor(cv.width/n);
+  const cs=getComputedStyle(document.documentElement);
+  const col={k:cs.getPropertyValue('--ink').trim(),o:cs.getPropertyValue('--sun').trim(),w:'#ffffff',p:'#16213f',r:cs.getPropertyValue('--red').trim()};
+  ctx.clearRect(0,0,cv.width,cv.height);
+  rows.forEach((row,y)=>[...row].forEach((c,x)=>{if(col[c]){ctx.fillStyle=col[c];ctx.fillRect(x*px,y*px,px,px)}}));
+}
+
+/* ========= ДАННЫЕ ========= */
+const pk=(a,b)=>a<b?a+'x'+b:b+'x'+a;
+const parse=k=>k.split('x').map(Number);
+const ALL=[];for(let a=1;a<=10;a++)for(let b=a;b<=10;b++)ALL.push(pk(a,b));
+const col=t=>[...new Set(Array.from({length:10},(_,i)=>pk(t,i+1)))];
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const L={
+ t1_10:{title:'× 1 и × 10',focus:[...new Set([...col(1),...col(10)])],cards:[
+  {t:'Что такое умножить',p:'Умножить — значит сложить одинаковые числа. <b>3 × 4</b> — это 4 + 4 + 4. Три ряда по четыре точки.',v:['dots',3,4]},
+  {t:'Переставь — ответ тот же',p:'<b>3 × 4 = 4 × 3</b>. Поверни картинку набок — точек столько же. Значит, учить надо в два раза меньше!',v:['dots',4,3]},
+  {t:'Умножить на 1',p:'Взяли число один раз — оно не изменилось. <b>7 × 1 = 7</b>.',v:['col',1]},
+  {t:'Умножить на 10',p:'Просто допиши ноль. <b>6 × 10 = 60</b>.',v:['col',10]}]},
+ t2:{title:'× 2',focus:col(2),cards:[
+  {t:'Умножить на 2',p:'Это удвоить: число плюс оно же. <b>7 × 2 = 7 + 7 = 14</b>.',v:['dots',2,7]},
+  {t:'Двойка любит четные',p:'Все ответы на 2 четные: 2, 4, 6, 8, 10, 12… Нечетного ответа тут быть не может.',v:['col',2]}]},
+ t5:{title:'× 5',focus:col(5),cards:[
+  {t:'Умножить на 5',p:'Ответы кончаются на 0 или 5 — как минуты на часах: 5, 10, 15, 20…',v:['col',5]},
+  {t:'Половина десятки',p:'Умножь на 10 и раздели пополам. <b>5 × 8</b>: 8 × 10 = 80, половина — <b>40</b>.',v:['dots',5,8]}]},
+ t3:{title:'× 3',focus:col(3),cards:[
+  {t:'Умножить на 3',p:'Удвой и прибавь еще раз. <b>3 × 7</b>: 7 + 7 = 14, и еще 7 — <b>21</b>.',v:['dots',3,7]},
+  {t:'Цифры по порядку',p:'<b>1, 2, 3, 4</b> → 12 = 3 × 4. Цифры идут подряд!',v:['dots',3,4]},
+  {t:'Три недели',p:'В неделе 7 дней. Три недели — <b>21 день</b>, значит 3 × 7 = 21.',v:['col',3]}]},
+ t4:{title:'× 4',focus:col(4),cards:[
+  {t:'Умножить на 4',p:'Удвой два раза. <b>4 × 6</b>: 6 → 12 → <b>24</b>.',v:['dots',4,6]},
+  {t:'Февраль',p:'В феврале 4 недели по 7 дней — <b>28 дней</b>. Значит 4 × 7 = 28.',v:['col',4]}]},
+ t9:{title:'× 9',focus:col(9),cards:[
+  {t:'Девятка на пальцах',p:'Положи руки на стол. Загни палец с номером числа. Пальцы слева — десятки, справа — единицы. <b>9 × 4</b>: загнули 4-й палец, слева 3, справа 6 — <b>36</b>.',v:['fingers',4]},
+  {t:'Десятка минус число',p:'<b>9 × 7</b> = 7 × 10 − 7 = 70 − 7 = <b>63</b>.',v:['fingers',7]},
+  {t:'Секрет девятки',p:'Цифры ответа в сумме дают 9: 18 → 1 + 8, 27 → 2 + 7. А десятков на один меньше числа: 9 × 6 = <b>5</b>4.',v:['col',9]}]},
+ sq:{title:'Квадраты',focus:[2,3,4,5,6,7,8,9].map(k=>pk(k,k)),cards:[
+  {t:'Квадраты',p:'Когда число умножают само на себя, точки складываются в квадрат. <b>6 × 6 = 36</b> — «шесть на шесть — тридцать шесть», как считалка.',v:['dots',6,6]},
+  {t:'Шахматная доска',p:'На доске 8 рядов по 8 клеток — <b>8 × 8 = 64</b>.',v:['dots',8,8]},
+  {t:'Семь недель',p:'Семь недель — <b>49 дней</b>. 7 × 7 = 49.',v:['sq']}]},
+ t6:{title:'× 6',focus:col(6),cards:[
+  {t:'Умножить на 6',p:'Умножь на 5 и добавь число еще раз. <b>6 × 7</b>: 35 + 7 = <b>42</b>.',v:['dots',6,7]},
+  {t:'Шестерка и четные',p:'6 на четное число — ответ кончается этим же числом: 6 × 2 = 1<b>2</b>, 6 × 4 = 2<b>4</b>, 6 × 6 = 3<b>6</b>, 6 × 8 = 4<b>8</b>.',v:['col',6]}]},
+ t7:{title:'× 7',focus:col(7),cards:[
+  {t:'Умножить на 7',p:'Это × 5 и еще × 2. <b>7 × 8</b>: 40 + 16 = <b>56</b>.',v:['dots',7,8]},
+  {t:'5, 6, 7, 8',p:'<b>56 = 7 × 8</b> — цифры идут по порядку: 5, 6, 7, 8. Самый известный секрет таблицы!',v:['col',7]},
+  {t:'Недели',p:'2 недели — 14 дней, 3 недели — 21 день, 4 недели — 28 дней, 7 недель — 49 дней.',v:['dots',4,7]}]},
+ t8:{title:'× 8',focus:col(8),cards:[
+  {t:'Умножить на 8',p:'Удвой три раза. <b>8 × 7</b>: 7 → 14 → 28 → <b>56</b>.',v:['dots',8,7]},
+  {t:'Сутки',p:'В сутках 24 часа — это 3 смены по 8 часов. <b>3 × 8 = 24</b>.',v:['col',8]}]},
+ all:{title:'Вся таблица',focus:ALL,cards:[
+  {t:'Вся таблица!',p:'Ты прошел все столбики. Теперь в тренировках трудные примеры будут попадаться чаще, а выученные — реже.',v:['table']}]}
+};
+const STAGES=[{n:'Этап 1 · Легкие',l:['t1_10','t2','t5']},{n:'Этап 2 · Средние',l:['t3','t4','t9']},{n:'Этап 3 · Квадраты',l:['sq']},{n:'Этап 4 · Трудные',l:['t6','t7','t8']},{n:'Этап 5 · Вся таблица',l:['all']}];
+const ORDER=STAGES.flatMap(s=>s.l);
+
+const SPECIAL={
+ '3x4':'1, 2, 3, 4 → 12 = 3 × 4: цифры идут подряд',
+ '7x8':'5, 6, 7, 8 → 56 = 7 × 8: цифры идут подряд',
+ '6x8':'«Шесть на восемь — сорок восемь»: шестерка на четное кончается тем же числом',
+ '4x6':'Шестерка на четное: ответ кончается тем же числом — 2<b>4</b>',
+ '2x6':'Шестерка на четное: ответ кончается тем же числом — 1<b>2</b>',
+ '6x6':'«Шесть на шесть — тридцать шесть», как считалка',
+ '7x7':'Семь недель — 49 дней',
+ '8x8':'Шахматная доска: 8 на 8 — 64 клетки',
+ '2x7':'Две недели — 14 дней',
+ '3x7':'Три недели — 21 день',
+ '4x7':'Февраль: 4 недели — 28 дней',
+ '3x8':'Сутки: 3 смены по 8 часов — 24 часа',
+ '4x4':'4 машины по 4 колеса — 16 колес',
+ '5x5':'«Пять на пять — двадцать пять»',
+ '6x7':'6 × 6 = 36, и еще одна шестерка — 42',
+ '7x9':'Пальцы: загни 7-й — слева 6, справа 3 → 63',
+ '8x9':'Пальцы: загни 8-й — слева 7, справа 2 → 72',
+ '6x9':'Пальцы: загни 6-й — слева 5, справа 4 → 54'
+};
+function strategy(a,b){
+  for(const f of [1,10,2,5,9,4,3,6,7,8]){
+    if(a!==f&&b!==f)continue; const x=a===f?b:a;
+    switch(f){
+      case 1:return 'Умножить на 1 — число не меняется';
+      case 10:return `На 10 — допиши ноль: ${x} → ${x*10}`;
+      case 2:return `Удвой: ${x} + ${x} = ${x*2}`;
+      case 5:return `${x} × 10 = ${x*10}, половина — ${x*5}`;
+      case 9:return `${x} × 10 = ${x*10}, минус ${x} — ${x*9}`;
+      case 4:return `Удвой два раза: ${x} → ${x*2} → ${x*4}`;
+      case 3:return `Удвой и прибавь: ${x*2} + ${x} = ${x*3}`;
+      case 6:return `${x} × 5 = ${x*5}, плюс ${x} — ${x*6}`;
+      case 7:return `${x} × 5 = ${x*5}, плюс ${x} × 2 = ${x*2}, вместе ${x*7}`;
+      case 8:return `Удвой три раза: ${x} → ${x*2} → ${x*4} → ${x*8}`;
+    }
+  }
+  return '';
+}
+function assoc(k){const [a,b]=parse(k);const r=[];if(S.custom[k])r.push(esc(S.custom[k]));if(SPECIAL[k])r.push(SPECIAL[k]);r.push(strategy(a,b));return r;}
+
+/* ========= СОХРАНЕНИЕ ========= */
+const STORE='umnozhaika-yaroslav-v1';
+function blank(){return{introduced:[],lessonsDone:[],lastLessonDate:null,forceNext:false,stats:{},days:{},custom:{},sound:true}}
+function load(){try{const r=localStorage.getItem(STORE);if(r)return Object.assign(blank(),JSON.parse(r))}catch(e){}return blank()}
+function save(){try{localStorage.setItem(STORE,JSON.stringify(S))}catch(e){}}
+let S=load();
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const dnum=s=>{const[y,m,d]=(s||today()).split('-').map(Number);return Date.UTC(y,m-1,d)/864e5};
+const dstr=n=>new Date(n*864e5).toISOString().slice(0,10);
+const day=()=>S.days[today()]||(S.days[today()]={tasks:0,correct:0,ms:0});
+function streak(){const has=n=>{const o=S.days[dstr(n)];return o&&(o.lesson||o.practice)};let d=dnum(),n=0;if(!has(d))d--;while(has(d)){n++;d--}return n}
+const box=k=>S.stats[k]?S.stats[k].box:0;
+const learned=()=>ALL.filter(k=>box(k)>=3).length;
+const nextLesson=()=>ORDER.find(id=>!S.lessonsDone.includes(id));
+const lessonAvail=()=>{const n=nextLesson();return !!n&&(S.lastLessonDate!==today()||S.forceNext)};
+const INTERVALS=[0,1,2,4,7,14];
+
+function record(k,ok,ms,hinted){
+  const st=S.stats[k]||(S.stats[k]={box:0,due:0,seen:0,wrong:0,slow:0,ms:0,up:null});
+  const t=today(),tn=dnum();st.seen++;st.ms+=Math.min(ms,30000);
+  if(!ok){st.wrong++;st.box=0;st.due=tn}
+  else if(hinted||ms>10000){st.slow++;st.box=Math.min(st.box,2);st.due=tn}
+  else if(st.up!==t){st.box=Math.min(5,st.box+1);st.up=t;st.due=tn+INTERVALS[st.box]}
+  const d=day();d.tasks++;if(ok)d.correct++;save();
+}
+
+/* ========= ЗВУК ========= */
+let AC=null;
+function beep(ok){if(!S.sound)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const t0=AC.currentTime;(ok?[660,880]:[300,220]).forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;g.gain.setValueAtTime(.05,t0+i*.09);g.gain.exponentialRampToValueAtTime(.001,t0+i*.09+.12);o.connect(g).connect(AC.destination);o.start(t0+i*.09);o.stop(t0+i*.09+.13)})}catch(e){}}
+
+/* ========= КАРТИНКИ ========= */
+function dotsSVG(a,b){const c=22,g=8,w=b*c+Math.floor((b-1)/5)*g,h=a*c+Math.floor((a-1)/5)*g;let s='';
+  for(let i=0;i<a;i++)for(let j=0;j<b;j++){const x=j*c+Math.floor(j/5)*g+c/2,y=i*c+Math.floor(i/5)*g+c/2;s+=`<circle cx="${x}" cy="${y}" r="7.5" fill="var(--ink)"/>`}
+  return `<div class="vis"><svg viewBox="-4 -4 ${w+8} ${h+8}" width="${w+8}" role="img" aria-label="${a} рядов по ${b}">${s}</svg></div>`}
+function fingersSVG(n){let s='';const hs=[52,74,82,76,60,60,76,82,74,52];
+  for(let i=0;i<10;i++){const x=i*30+(i>=5?24:0),bent=i===n-1,h=bent?28:hs[i];
+    s+=`<rect x="${x}" y="${92-h}" width="24" height="${h}" rx="11" fill="${bent?'var(--red)':(i<n-1?'var(--ink)':'var(--muted)')}"/><text x="${x+12}" y="112" text-anchor="middle" font-size="12" font-weight="800" fill="var(--muted)" font-family="Nunito,sans-serif">${i+1}</text>`}
+  return `<div class="vis"><svg viewBox="0 0 318 118" width="318" role="img" aria-label="Пальцы для 9 × ${n}">${s}</svg></div><p class="muted" style="text-align:center;margin:0">слева ${n-1} — десятки, справа ${10-n} — единицы → <b>${9*n}</b></p>`}
+function colHTML(t){let s='';for(let k=1;k<=10;k++)s+=`<div>${t} × ${k} = ${t*k}</div>`;return `<div class="colgrid">${s}</div>`}
+function sqHTML(){let s='';for(let k=1;k<=10;k++)s+=`<div>${k} × ${k} = ${k*k}</div>`;return `<div class="colgrid">${s}</div>`}
+function tableHTML(){let s='<div class="hd"></div>';for(let b=1;b<=10;b++)s+=`<div class="hd">${b}</div>`;for(let a=1;a<=10;a++){s+=`<div class="hd">${a}</div>`;for(let b=1;b<=10;b++)s+=`<div class="${box(pk(a,b))>=3?'c-ok':'c-new'}">${a*b}</div>`}return `<div class="vis"><div class="heat">${s}</div></div>`}
+function vis(v){if(!v)return'';if(v[0]==='dots')return dotsSVG(v[1],v[2]);if(v[0]==='fingers')return fingersSVG(v[1]);if(v[0]==='col')return colHTML(v[1]);if(v[0]==='sq')return sqHTML();if(v[0]==='table')return tableHTML();return''}
+function hintHTML(k,a,b){const lines=assoc(k).filter(Boolean);const nine=(a===9||b===9)&&a!==b?fingersSVG(a===9?b:a):dotsSVG(a,b);
+  return `<div class="hint"><ul>${lines.map(l=>`<li>${l}</li>`).join('')}</ul>${(a>1&&b>1)?nine:''}</div>`}
+
+/* ========= ПАНЕЛЬ СВЕРХУ ========= */
+const bar=document.getElementById('bar'),view=document.getElementById('view');
+function homeBar(){bar.innerHTML=`<div class="logo">УМНОЖАЙКА</div><div style="flex:1"></div><button class="btn ghost small" id="mute">${S.sound?'Звук: вкл':'Звук: выкл'}</button>`;
+  document.getElementById('mute').onclick=()=>{S.sound=!S.sound;save();homeBar()}}
+function sessionBar(){bar.innerHTML=`<button class="home" id="quit">← Выйти</button><div class="meter"><i id="mfill"></i></div><span class="info" id="minfo"></span>`;
+  const q=document.getElementById('quit');let armed=false;
+  q.onclick=()=>{if(!armed){armed=true;q.textContent='Точно выйти?';setTimeout(()=>{armed=false;if(q.isConnected)q.textContent='← Выйти'},3000);return}endSession(false)};
+  updateMeter()}
+const PRACTICE_MS=6*60*1000;
+function updateMeter(){if(!SES)return;const f=document.getElementById('mfill'),inf=document.getElementById('minfo');if(!f)return;
+  if(SES.kind==='practice'){const el=Date.now()-SES.start,left=Math.max(0,PRACTICE_MS-el);f.style.width=Math.min(100,el/PRACTICE_MS*100)+'%';inf.textContent=`Тренировка ${Math.floor(left/60000)}:${String(Math.floor(left/1000)%60).padStart(2,'0')}`}
+  else{const tot=SES.queue.length||1;f.style.width=(SES.phase==='cards'?0:Math.min(100,SES.qi/tot*100))+'%';inf.textContent=`Урок ${L[SES.id].title}`}}
+setInterval(updateMeter,500);
+
+/* ========= ДОМ ========= */
+function home(){SES=null;homeBar();const n=nextLesson(),av=lessonAvail(),d=S.days[today()]||{};
+  const lDone=!!d.lesson,pDone=!!d.practice,hasPool=S.introduced.length>0;
+  let msg,btn,act;
+  if(av&&!lDone){msg=S.lessonsDone.length?`Привет, Ярослав! Сегодня новый урок: ${L[n].title}.`:'Привет, Ярослав! Я Пикс. Пойдем учить таблицу умножения — начнем с самого простого.';btn=`Начать урок ${L[n].title}`;act=()=>startLesson(n)}
+  else if(hasPool&&!pDone){msg=lDone?'Урок пройден! Теперь тренировка — и на сегодня все.':'Сегодня без нового урока. Потренируемся?';btn='Начать тренировку';act=startPractice}
+  else if(hasPool){msg=n?'На сегодня все сделано! Новый урок будет завтра.':'Ты прошел всю таблицу! Тренируйся каждый день, чтобы не забыть.';btn='Еще одна тренировка';act=startPractice}
+  else{msg='Привет!';btn='Начать урок';act=()=>startLesson(n)}
+  const lStat=lDone?'готово':(av?'новый урок':(n?'новый урок завтра':'курс пройден'));
+  let map='';STAGES.forEach(st=>{map+=`<div class="stage"><h3>${st.n}</h3><div class="nodes">${st.l.map(id=>{const done=S.lessonsDone.includes(id),isNext=id===n;const cls=done?'done':(isNext&&av?'next':'lock');return `<button class="node ${cls}" data-l="${id}">${L[id].title}<small>${done?'пройден':(isNext?(av?'сегодня':'завтра'):'впереди')}</small></button>`}).join('')}</div></div>`});
+  view.innerHTML=`
+  <section class="hello"><canvas id="hero" width="96" height="96"></canvas><div class="bubble">${msg}</div></section>
+  <section class="card"><h2 style="font-size:22px;font-weight:900">Сегодня</h2>
+    <div class="steps"><div class="step ${lDone?'done':''}"><b>Урок · 5–7 мин</b><span>${lStat}</span></div>
+    <div class="step ${pDone?'done':''}"><b>Тренировка · 6 мин</b><span>${pDone?'готово':(hasPool?'ждет':'после первого урока')}</span></div></div>
+    <button class="btn wide ${(lDone&&pDone)||(!n&&pDone)?'ghost':''}" id="go">${btn}</button></section>
+  <section class="chips"><div class="chip"><b>${streak()}</b><span>дней подряд</span></div><div class="chip"><b>${learned()} / 55</b><span>примеров выучено</span></div></section>
+  <section class="card"><h2 style="font-size:22px;font-weight:900;margin-bottom:4px">Дорога по таблице</h2><p class="muted" style="margin:0 0 6px;font-size:15px">Пройденный урок можно повторить — нажми на него.</p>${map}</section>
+  <div class="row2"><button class="btn ghost" id="mom">Для мамы</button></div>`;
+  drawHero(document.getElementById('hero'),'happy');
+  document.getElementById('go').onclick=act;
+  document.getElementById('mom').onclick=mom;
+  view.querySelectorAll('.node').forEach(b=>b.onclick=()=>{const id=b.dataset.l;if(S.lessonsDone.includes(id))startLesson(id,true);else if(id===n&&av)startLesson(id)});
+  scrollTo(0,0)}
+
+/* ========= ЗАНЯТИЯ ========= */
+let SES=null;
+function startLesson(id,replay){const les=L[id];const fresh=replay?[]:les.focus.filter(k=>!S.introduced.includes(k));
+  SES={kind:'lesson',id,replay,fresh,phase:'cards',card:0,queue:[],qi:0,total:0,correct:0,errs:[],requeue:[],start:Date.now(),recent:[]};
+  if(!replay&&S.forceNext){S.forceNext=false;save()}
+  sessionBar();renderCard()}
+function renderCard(){const les=L[SES.id],c=les.cards[SES.card],last=SES.card===les.cards.length-1;
+  view.innerHTML=`<section class="card lesson-card"><h2>${c.t}</h2><p>${c.p}</p>${vis(c.v)}</section>
+  <div class="dots">${les.cards.map((_,i)=>`<i class="${i<=SES.card?'on':''}"></i>`).join('')}</div>
+  <div class="row2" style="justify-content:space-between">${SES.card>0?'<button class="btn ghost" id="prev">Назад</button>':'<span></span>'}<button class="btn" id="nx">${last?'К заданиям':'Дальше'}</button></div>`;
+  document.getElementById('nx').onclick=()=>{if(last)beginLessonTasks();else{SES.card++;renderCard()}};
+  const p=document.getElementById('prev');if(p)p.onclick=()=>{SES.card--;renderCard()};scrollTo(0,0)}
+function beginLessonTasks(){const les=L[SES.id];
+  SES.fresh.forEach(k=>{if(!S.introduced.includes(k))S.introduced.push(k)});save();
+  let main=SES.fresh.length?SES.fresh.slice():les.focus.slice();
+  if(SES.id==='all'){main=ALL.slice().sort((x,y)=>box(x)-box(y)||((S.stats[y]||{}).wrong||0)-((S.stats[x]||{}).wrong||0)).slice(0,14)}
+  const pattern=['choose','choose','tf','pairs','choose','missing','tf','pairs','missing','type','choose','type','missing','type'];
+  let bagM=[],bagF=[],prev=null;
+  SES.queue=pattern.map(t=>{let k;for(let i=0;i<5;i++){if(Math.random()<.7||SES.id==='all'){if(!bagM.length)bagM=shuffle(main.slice());k=bagM.pop()}else{if(!bagF.length)bagF=shuffle(les.focus.slice());k=bagF.pop()}if(k!==prev)break}prev=k;return mkTask(t,k,les.focus)});
+  SES.phase='tasks';SES.qi=0;nextTask()}
+function startPractice(){if(!S.introduced.length){home();return}
+  SES={kind:'practice',start:Date.now(),total:0,correct:0,errs:[],requeue:[],recent:[]};sessionBar();nextTask()}
+function pickKey(pool,avoid){const tn=dnum();let tot=0;
+  const w=pool.map(k=>{const st=S.stats[k],b=st?st.box:0,due=!st||st.due<=tn;let x=(6-b)*(6-b)*(due?3:1);const[a,c]=parse(k);if(a===1||c===10||a===10)x*=.35;if(avoid.includes(k))x=.01;tot+=x;return x});
+  let r=Math.random()*tot;for(let i=0;i<pool.length;i++){r-=w[i];if(r<=0)return pool[i]}return pool[pool.length-1]}
+function typeFor(k){const b=box(k);const opts=b===0?['choose','tf','pairs','choose']:b===1?['choose','missing','pairs','tf']:b===2?['type','missing','choose']:['type','type','missing'];return opts[Math.floor(Math.random()*opts.length)]}
+function mkTask(type,k,pool){let[a,b]=parse(k);if(Math.random()<.5)[a,b]=[b,a];const t={type,k,a,b};
+  if(type==='pairs'){const keys=[k],prods=new Set([a*b]);const src=shuffle((pool||S.introduced).slice().concat(shuffle(S.introduced.slice())));for(const x of src){if(keys.length>=4)break;const[p,q]=parse(x);if(!prods.has(p*q)){keys.push(x);prods.add(p*q)}}t.keys=keys}
+  if(type==='tf'){t.shown=Math.random()<.5?a*b:distract(a,b)[0]}
+  return t}
+function distract(a,b){const r=a*b,s=new Set();const sw=r>9?Number(String(r).split('').reverse().join('')):-1;
+  shuffle([(a+1)*b,(a-1)*b,a*(b+1),a*(b-1),r+1,r-1,r+10,r-10,sw,r+2]).forEach(x=>{if(x>0&&x!==r&&s.size<3)s.add(x)});return[...s]}
+
+function nextTask(){
+  if(SES.kind==='lesson'){
+    const rq=SES.requeue.findIndex(x=>x.at<=SES.total);
+    if(rq>=0){const t=SES.requeue.splice(rq,1)[0].task;return renderTask(t)}
+    if(SES.qi>=SES.queue.length){if(SES.requeue.length){return renderTask(SES.requeue.shift().task)}return endSession(true)}
+    return renderTask(SES.queue[SES.qi++])}
+  const el=Date.now()-SES.start;
+  if(el>=PRACTICE_MS&&SES.total>=8)return endSession(true);
+  const rq=SES.requeue.findIndex(x=>x.at<=SES.total);
+  if(rq>=0)return renderTask(SES.requeue.splice(rq,1)[0].task);
+  const k=pickKey(S.introduced,SES.recent);return renderTask(mkTask(typeFor(k),k))}
+
+let KEYH=null;
+function renderTask(t){SES.cur=t;t.t0=Date.now();t.hinted=false;t.done=false;KEYH=null;
+  const prompts={choose:'Выбери ответ',type:'Введи ответ',missing:'Какого числа не хватает?',tf:'Верно или нет?',pairs:'Составь пары'};
+  let body='';
+  if(t.type==='choose'){const o=shuffle([t.a*t.b,...distract(t.a,t.b)]);body=`<div class="expr">${t.a} × ${t.b} = <span class="q">?</span></div><div class="opts">${o.map(v=>`<button class="opt" data-v="${v}">${v}</button>`).join('')}</div>`}
+  else if(t.type==='tf'){body=`<div class="expr">${t.a} × ${t.b} = ${t.shown}</div><div class="tf"><button class="opt" data-v="1">Верно</button><button class="opt" data-v="0">Неверно</button></div>`}
+  else if(t.type==='type'){body=`<div class="expr">${t.a} × ${t.b} = <span class="q">?</span></div>${padHTML()}`}
+  else if(t.type==='missing'){body=`<div class="expr">${t.a} × <span class="q">?</span> = ${t.a*t.b}</div>${padHTML()}`}
+  else if(t.type==='pairs'){const L1=shuffle(t.keys.map(k=>{let[a,b]=parse(k);if(Math.random()<.5)[a,b]=[b,a];return{k,a,b}}));const R=shuffle(t.keys.map(k=>{const[a,b]=parse(k);return a*b}));
+    body=`<div class="pairs"><div class="colp">${L1.map(x=>`<button class="pairbtn" data-k="${x.k}">${x.a} × ${x.b}</button>`).join('')}</div><div class="colp">${R.map(v=>`<button class="pairbtn" data-v="${v}">${v}</button>`).join('')}</div></div>`}
+  view.innerHTML=`<section class="card task"><div class="task-head"><canvas id="th" width="48" height="48"></canvas><div class="prompt">${prompts[t.type]}</div>${t.type!=='pairs'?'<button class="lamp" id="lamp">Подсказка</button>':''}</div>${body}<div id="fb"></div></section>`;
+  drawHero(document.getElementById('th'),'idle');
+  const lamp=document.getElementById('lamp');if(lamp)lamp.onclick=()=>{if(t.done)return;t.hinted=true;lamp.remove();const st=strategy(t.a,t.b).replace(/\d+$/,'?');document.getElementById('fb').innerHTML=`<div class="fb tip"><div class="hint"><ul><li>${st}</li></ul>${(t.a>1&&t.b>1)?dotsSVG(t.a,t.b):''}</div></div>`};
+  if(t.type==='choose')view.querySelectorAll('.opt').forEach(b=>b.onclick=()=>answer(Number(b.dataset.v)===t.a*t.b,b));
+  if(t.type==='tf')view.querySelectorAll('.opt').forEach(b=>b.onclick=()=>answer((b.dataset.v==='1')===(t.shown===t.a*t.b),b));
+  if(t.type==='type'||t.type==='missing')bindPad(t.type==='type'?t.a*t.b:t.b);
+  if(t.type==='pairs')bindPairs(t);
+  scrollTo(0,0)}
+function padHTML(){return `<div class="answer empty" id="ans">…</div><div class="keys">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-n="${n}">${n}</button>`).join('')}<button data-n="del" aria-label="Стереть">⌫</button><button data-n="0">0</button><button data-n="ok" class="go">ОК</button></div>`}
+function bindPad(correct){let val='';const ab=document.getElementById('ans');
+  const show=()=>{ab.textContent=val||'…';ab.classList.toggle('empty',!val)};
+  const press=n=>{if(SES.cur.done)return;if(n==='del')val=val.slice(0,-1);else if(n==='ok'){if(val)answer(Number(val)===correct,ab)}else if(val.length<3)val+=n;show()};
+  view.querySelectorAll('.keys button').forEach(b=>b.onclick=()=>press(b.dataset.n));
+  KEYH=e=>{if(/^[0-9]$/.test(e.key))press(e.key);else if(e.key==='Backspace')press('del');else if(e.key==='Enter')press('ok')}}
+document.addEventListener('keydown',e=>{if(KEYH)KEYH(e)});
+function bindPairs(t){let selL=null,selR=null,left=t.keys.length;const tried=new Set();
+  const check=()=>{if(!selL||!selR)return;const k=selL.dataset.k,[a,b]=parse(k),ok=a*b===Number(selR.dataset.v);
+    if(ok){selL.classList.add('ok','gone');selR.classList.add('ok','gone');if(!tried.has(k)){record(k,true,Math.min(Date.now()-t.t0,8000),false);SES.correct++}SES.total++;beep(true);left--}
+    else{const l=selL,r=selR;l.classList.add('bad','shake');r.classList.add('bad','shake');beep(false);if(!tried.has(k)){tried.add(k);record(k,false,0,false);SES.errs.push(k);SES.requeue.push({task:mkTask('type',k),at:SES.total+3})}setTimeout(()=>{l.classList.remove('bad','shake');r.classList.remove('bad','shake')},400)}
+    selL.classList.remove('sel');selR.classList.remove('sel');selL=selR=null;
+    if(!left){t.done=true;drawHero(document.getElementById('th'),'happy');setTimeout(nextTask,600)}};
+  view.querySelectorAll('.pairbtn').forEach(b=>b.onclick=()=>{if(b.dataset.k){if(selL)selL.classList.remove('sel');selL=b}else{if(selR)selR.classList.remove('sel');selR=b}b.classList.add('sel');check()})}
+
+function answer(ok,el){const t=SES.cur;if(t.done)return;t.done=true;KEYH=null;const ms=Date.now()-t.t0;const r=t.a*t.b;
+  record(t.k,ok,ms,t.hinted);SES.total++;SES.recent=[t.k,...SES.recent].slice(0,3);
+  const fb=document.getElementById('fb');const hero=document.getElementById('th');
+  view.querySelectorAll('.opt,.keys button').forEach(b=>b.disabled=true);
+  if(ok){SES.correct++;beep(true);el&&el.classList.add('ok');drawHero(hero,'happy');
+    if(ms>10000&&!t.hinted){fb.innerHTML=`<div class="fb tip"><div><b>Верно!</b> Чтобы в следующий раз было быстрее:</div>${hintHTML(t.k,t.a,t.b)}<button class="btn" id="nx">Дальше</button></div>`;document.getElementById('nx').onclick=nextTask}
+    else{fb.innerHTML=`<div class="fb good"><b>Верно!</b></div>`;setTimeout(nextTask,650)}}
+  else{beep(false);el&&el.classList.add('bad','shake');drawHero(hero,'oops');SES.errs.push(t.k);
+    SES.requeue.push({task:mkTask('type',t.k),at:SES.total+2});
+    if(t.type==='choose')view.querySelectorAll('.opt').forEach(b=>{if(Number(b.dataset.v)===r)b.classList.add('ok')});
+    fb.innerHTML=`<div class="fb bad"><div>Не так. Правильно:</div><div class="big">${t.a} × ${t.b} = ${r}</div>${hintHTML(t.k,t.a,t.b)}<button class="btn" id="nx">Понятно</button></div>`;
+    document.getElementById('nx').onclick=nextTask;fb.scrollIntoView({behavior:'smooth',block:'nearest'})}}
+
+function endSession(complete){if(!SES)return;const s=SES,d=day();d.ms+=Math.min(Date.now()-s.start,15*60*1000);
+  if(complete){if(s.kind==='lesson'){d.lesson=true;if(!s.replay&&!S.lessonsDone.includes(s.id)){S.lessonsDone.push(s.id);S.lastLessonDate=today()}}else d.practice=true}
+  save();SES=null;KEYH=null;if(!complete)return home();
+  const acc=s.total?s.correct/s.total:1,stars=acc>=.9?3:acc>=.7?2:1;
+  const errs=[...new Set(s.errs)];const pDone=!!d.practice;
+  homeBar();
+  view.innerHTML=`<section class="card result"><canvas id="rh" width="96" height="96" style="width:96px;height:96px;image-rendering:pixelated"></canvas>
+   <h2 style="font-size:26px;font-weight:900">${s.kind==='lesson'?'Урок пройден!':'Тренировка окончена!'}</h2>
+   <div class="stars">${'★'.repeat(stars)}<span class="off">${'★'.repeat(3-stars)}</span></div>
+   <p style="margin:0;font-size:19px">Верно <b>${s.correct}</b> из <b>${s.total}</b></p>
+   ${errs.length?`<div class="fb tip" style="text-align:left;width:100%;box-sizing:border-box"><b>Эти примеры повторим еще:</b><div class="hint"><ul>${errs.slice(0,6).map(k=>{const[a,b]=parse(k);return `<li>${a} × ${b} = ${a*b} — ${assoc(k)[0]}</li>`}).join('')}</ul></div></div>`:''}
+   <div class="row2" style="justify-content:center">${s.kind==='lesson'&&!pDone?'<button class="btn" id="tr">Дальше: тренировка</button>':''}<button class="btn ghost" id="hm">На главную</button></div></section>`;
+  drawHero(document.getElementById('rh'),stars>1?'happy':'idle');
+  const tr=document.getElementById('tr');if(tr)tr.onclick=startPractice;document.getElementById('hm').onclick=home;scrollTo(0,0)}
+
+/* ========= ДЛЯ МАМЫ ========= */
+function mom(){SES=null;homeBar();const tn=dnum();
+  let heat='<div class="hd"></div>';for(let b=1;b<=10;b++)heat+=`<div class="hd">${b}</div>`;
+  for(let a=1;a<=10;a++){heat+=`<div class="hd">${a}</div>`;for(let b=1;b<=10;b++){const k=pk(a,b),st=S.stats[k];let c='c-none';if(S.introduced.includes(k)){c=!st?'c-new':st.box>=3?'c-ok':st.box===2?'c-mid':'c-weak'}heat+=`<div class="${c}" title="${a} × ${b}">${a*b}</div>`}}
+  const hard=Object.entries(S.stats).filter(([k,st])=>st.wrong>0||st.ms/st.seen>8000).sort((x,y)=>(y[1].wrong+y[1].slow*.5)-(x[1].wrong+x[1].slow*.5)).slice(0,8);
+  const daysArr=Array.from({length:14},(_,i)=>{const s=dstr(tn-13+i);const o=S.days[s];return{s,m:o?Math.round(o.ms/60000):0}});
+  const maxM=Math.max(15,...daysArr.map(x=>x.m));
+  const week=daysArr.slice(7).reduce((a,x)=>a+x.m,0);const sessions=Object.values(S.days).filter(o=>o.lesson||o.practice).length;
+  const opts=Array.from({length:10},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
+  view.innerHTML=`
+  <section class="row2" style="justify-content:space-between;align-items:center"><h1 style="font-size:26px;font-weight:900">Для мамы</h1><button class="btn ghost small" id="bk">← К Ярославу</button></section>
+  <section class="chips" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+   <div class="chip"><b>${streak()}</b><span>дней подряд</span></div><div class="chip"><b>${learned()} / 55</b><span>выучено (3 дня без ошибок)</span></div>
+   <div class="chip"><b>${S.lessonsDone.length} / ${ORDER.length}</b><span>уроков пройдено</span></div><div class="chip"><b>${week}</b><span>минут за 7 дней</span></div></section>
+  <section class="card sec"><h2>Карта таблицы</h2><div style="overflow-x:auto"><div class="heat">${heat}</div></div>
+   <div class="legend" style="margin-top:10px"><span><i class="c-ok"></i>выучено</span><span><i class="c-mid"></i>почти</span><span><i class="c-weak"></i>трудно</span><span><i class="c-new"></i>начали</span><span><i class="c-none"></i>еще не было</span></div></section>
+  <section class="card sec"><h2>Трудные примеры</h2>${hard.length?`<div class="hard">${hard.map(([k,st])=>{const[a,b]=parse(k);return `<div class="it"><b>${a} × ${b}</b><span>ошибок ${st.wrong} · думал в среднем ${Math.round(st.ms/st.seen/1000)} с<br>${assoc(k)[0]}</span><button class="btn ghost small" data-own="${k}">Своя подсказка</button></div>`}).join('')}</div>`:'<p class="muted" style="margin:0">Пока трудных примеров нет. Они появятся, когда Ярослав начнет ошибаться или долго думать.</p>'}</section>
+  <section class="card sec"><h2>Минуты занятий за 2 недели</h2><div class="bars">${daysArr.map(x=>`<div class="${x.m?'':'zero'}" style="height:${x.m/maxM*100}%" title="${x.s}: ${x.m} мин"></div>`).join('')}</div><div class="barlab">${daysArr.map(x=>`<span>${Number(x.s.slice(8))}</span>`).join('')}</div></section>
+  <section class="card sec" id="own"><h2>Свои подсказки</h2><p class="muted" style="margin:0 0 10px">Ваша ассоциация будет показываться первой, когда Ярослав ошибается.</p>
+   <div class="row2" style="align-items:center;margin-bottom:10px"><select id="oa" aria-label="Первое число">${opts}</select><b>×</b><select id="ob" aria-label="Второе число">${opts}</select></div>
+   <textarea id="ot" placeholder="Например: 6 × 7 = 42 — у бабушки 6 кур, каждая снесла 7 яиц"></textarea>
+   <div class="row2" style="margin-top:10px"><button class="btn small" id="osave">Сохранить</button><span id="omsg" class="muted" style="align-self:center"></span></div>
+   <div class="list" style="margin-top:12px">${Object.entries(S.custom).map(([k,v])=>{const[a,b]=parse(k);return `<div class="row2" style="align-items:center;justify-content:space-between;border-top:1px solid var(--grid);padding-top:8px"><span><b>${a} × ${b}</b> — ${esc(v)}</span><button class="btn ghost small" data-del="${k}">Удалить</button></div>`}).join('')}</div></section>
+  <section class="card sec"><h2>Настройки</h2><div class="row2">
+   <button class="btn ghost small" id="force" ${!nextLesson()||lessonAvail()?'disabled style="opacity:.5"':''}>Открыть следующий урок сегодня</button>
+   <button class="btn ghost small" id="reset" style="border-color:var(--red);color:var(--red)">Сбросить весь прогресс</button></div>
+   <p class="muted" style="margin:10px 0 0;font-size:14px">Прогресс хранится в браузере этого планшета. Если очистить данные браузера, он пропадет.</p></section>`;
+  document.getElementById('bk').onclick=home;
+  view.querySelectorAll('[data-own]').forEach(b=>b.onclick=()=>{const[a,c]=parse(b.dataset.own);document.getElementById('oa').value=a;document.getElementById('ob').value=c;document.getElementById('ot').value=S.custom[b.dataset.own]||'';document.getElementById('own').scrollIntoView({behavior:'smooth'});document.getElementById('ot').focus()});
+  document.getElementById('osave').onclick=()=>{const a=+document.getElementById('oa').value,b=+document.getElementById('ob').value,v=document.getElementById('ot').value.trim();const m=document.getElementById('omsg');if(!v){m.textContent='Напишите подсказку';return}S.custom[pk(a,b)]=v;save();mom();};
+  view.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{delete S.custom[b.dataset.del];save();mom()});
+  const f=document.getElementById('force');f.onclick=()=>{if(f.disabled)return;S.forceNext=true;save();f.textContent='Открыт — можно начинать';f.disabled=true};
+  const r=document.getElementById('reset');let armed=false;r.onclick=()=>{if(!armed){armed=true;r.textContent='Нажмите еще раз, чтобы стереть все';setTimeout(()=>{armed=false;if(r.isConnected)r.textContent='Сбросить весь прогресс'},4000);return}S=blank();save();home()};
+  scrollTo(0,0)}
+
+home();
+if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+</script>
+</body>
+</html>
